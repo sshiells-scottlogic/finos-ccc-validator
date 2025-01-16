@@ -2,8 +2,8 @@
 
 namespace Finos.CCC.Validator.Models;
 
-internal record CommonFeatures
+internal record CommonControls
 {
     [Required]
-    public required List<Feature> Features { get; set; }
+    public required List<Control> Controls { get; set; }
 }

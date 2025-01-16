@@ -1,15 +1,18 @@
 ﻿using CommandLine;
 using Finos.CCC.Validator.Models;
+using Finos.CCC.Validator.Validators;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using static CommandLine.Parser;
-using Finos.CCC.Validator.Validators;
 
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddSingleton<IFeaturesValidator, FeaturesValidator>();
+builder.Services.AddSingleton<CommonFeaturesValidator>();
+builder.Services.AddSingleton<CommonThreatsValidator>();
+builder.Services.AddSingleton<CommonControlsValidator>();
+builder.Services.AddSingleton<FeaturesValidator>();
 
 using IHost host = builder.Build();
 
@@ -33,8 +36,24 @@ await host.RunAsync();
 
 static async ValueTask StartAnalysisAsync(ActionInputs inputs, IHost host)
 {
-    var featureValidator = host.Services.GetRequiredService<IFeaturesValidator>();
-    await featureValidator.Validate(inputs.TargetDir);
+    var isValid = true;
 
-    Environment.Exit(0);
+    // TODO Parse metadata
+
+    var commonFeatureValidator = host.Services.GetRequiredService<CommonFeaturesValidator>();
+    var commonFeaturesResult = await commonFeatureValidator.Validate(inputs.TargetDir);
+    var commonThreatsValidator = host.Services.GetRequiredService<CommonThreatsValidator>();
+    var commonThreatsResult = await commonThreatsValidator.Validate(inputs.TargetDir);
+    var commonControlsValidator = host.Services.GetRequiredService<CommonControlsValidator>();
+    var commonControlsResult = await commonControlsValidator.Validate(inputs.TargetDir);
+
+    // populate id fields
+
+    // validate features
+
+    // valdiate threats
+
+    // validate controls
+
+    Environment.Exit(isValid ? 0 : 1);
 }
