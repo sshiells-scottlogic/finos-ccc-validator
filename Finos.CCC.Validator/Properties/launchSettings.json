@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Finos.CCC.Validator": {
+      "commandName": "Project",
+      "commandLineArgs": "-t \"C:\\dev\\common-cloud-controls\\services\""
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
