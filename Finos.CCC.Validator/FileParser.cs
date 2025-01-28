@@ -1,20 +1,20 @@
 ﻿using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace Finos.CCC.Validator.Validators;
+namespace Finos.CCC.Validator;
 
-public interface IValidator
+public interface IFileParser
 {
     Task<T> ParseYamlFile<T>(string filename);
 
     Task<Dictionary<string, T>> ParseYamlFiles<T>(string targetDir, string pattern);
 }
 
-public abstract class Validator : IValidator
+public abstract class FileParser : IFileParser
 {
     private IDeserializer _deserializer;
 
-    public Validator()
+    public FileParser()
     {
         _deserializer = new DeserializerBuilder()
             .WithNamingConvention(UnderscoredNamingConvention.Instance)

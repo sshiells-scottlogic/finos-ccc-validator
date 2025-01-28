@@ -2,11 +2,11 @@
 
 namespace Finos.CCC.Validator.Validators;
 
-internal interface IFeaturesValidator : IValidator
+internal interface IFeaturesValidator : IFileParser
 {
 }
 
-internal class FeaturesValidator : Validator, IFeaturesValidator
+internal class FeaturesValidator : FileParser, IFeaturesValidator
 {
     public async Task<bool> Validate(string targetDir)
     {

@@ -1,8 +1,6 @@
 ﻿namespace Finos.CCC.Validator.Models;
 
-internal record Feature
+internal record Metadata
 {
     public required string Id { get; set; }
-
-    public required string Title { get; set; }
 }

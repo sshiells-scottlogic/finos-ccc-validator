@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using Finos.CCC.Validator;
 using Finos.CCC.Validator.Models;
 using Finos.CCC.Validator.Validators;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,7 @@ builder.Services.AddSingleton<CommonFeaturesValidator>();
 builder.Services.AddSingleton<CommonThreatsValidator>();
 builder.Services.AddSingleton<CommonControlsValidator>();
 builder.Services.AddSingleton<FeaturesValidator>();
+builder.Services.AddSingleton<MetadataReader>();
 
 using IHost host = builder.Build();
 
@@ -47,7 +49,8 @@ static async ValueTask StartAnalysisAsync(ActionInputs inputs, IHost host)
     var commonControlsValidator = host.Services.GetRequiredService<CommonControlsValidator>();
     var commonControlsResult = await commonControlsValidator.Validate(inputs.TargetDir);
 
-    // populate id fields
+    var metadataReader = host.Services.GetRequiredService<MetadataReader>();
+    var metadata = await metadataReader.LoadMetaData(inputs.TargetDir);
 
     // validate features
 

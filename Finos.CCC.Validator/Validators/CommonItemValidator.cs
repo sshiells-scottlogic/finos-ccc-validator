@@ -6,7 +6,7 @@ public interface ICommonItemValidator<TCommonItem, TItem>
 {
     Task<Result<List<string>>> Validate(string targetDir);
 }
-internal abstract class CommonItemValidator<TCommonItem, TItem> : Validator, ICommonItemValidator<TCommonItem, TItem>
+internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, ICommonItemValidator<TCommonItem, TItem>
 {
     public abstract string Filename { get; }
     public abstract string Description { get; }
