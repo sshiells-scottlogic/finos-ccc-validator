@@ -18,18 +18,15 @@ internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, IC
     {
         Console.WriteLine($"Validation of Common {Description} Started");
 
-        List<string> ids = [];
-
         var isValid = true;
 
         var commonItem = await ParseYamlFile<TCommonItem>(Path.Combine(targetDir, Filename));
+        var ids = GetItems(commonItem).Select(GetId).ToList();
 
-        var grouped = GetItems(commonItem).GroupBy(GetId).Where(x => x.Count() > 1);
+        var grouped = ids.GroupBy(x => x).Where(x => x.Count() > 1);
 
         if (grouped.Any())
         {
-            // TODO - validate ids against metadata 
-
             isValid = false;
 
             foreach (var feature in grouped)
@@ -38,8 +35,7 @@ internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, IC
             }
         }
 
-        var status = isValid ? "SUCCESS" : "FAILED";
-        Console.WriteLine($"Validation of Common {Description} Complete. Status: {status}");
+        Console.WriteLine($"Validation of Common {Description} Complete. Status: {isValid.ToPassOrFail()}");
 
         return isValid ? Result.Success(ids) : Result.Failure<List<string>>($"Error validating Common {Description}");
     }

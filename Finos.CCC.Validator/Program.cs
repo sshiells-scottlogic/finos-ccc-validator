@@ -14,6 +14,7 @@ builder.Services.AddSingleton<CommonFeaturesValidator>();
 builder.Services.AddSingleton<CommonThreatsValidator>();
 builder.Services.AddSingleton<CommonControlsValidator>();
 builder.Services.AddSingleton<FeaturesValidator>();
+builder.Services.AddSingleton<ThreatsValidator>();
 builder.Services.AddSingleton<MetadataReader>();
 
 using IHost host = builder.Build();
@@ -40,8 +41,6 @@ static async ValueTask StartAnalysisAsync(ActionInputs inputs, IHost host)
 {
     var isValid = true;
 
-    // TODO Parse metadata
-
     var commonFeatureValidator = host.Services.GetRequiredService<CommonFeaturesValidator>();
     var commonFeaturesResult = await commonFeatureValidator.Validate(inputs.TargetDir);
     var commonThreatsValidator = host.Services.GetRequiredService<CommonThreatsValidator>();
@@ -52,9 +51,18 @@ static async ValueTask StartAnalysisAsync(ActionInputs inputs, IHost host)
     var metadataReader = host.Services.GetRequiredService<MetadataReader>();
     var metadata = await metadataReader.LoadMetaData(inputs.TargetDir);
 
-    // validate features
+    var commonData = new CommonData
+    {
+        Controls = commonControlsResult.Value,
+        Features = commonFeaturesResult.Value,
+        Threats = commonThreatsResult.Value,
+        MetaData = metadata
+    };
 
-    // valdiate threats
+    var featuresValidator = host.Services.GetRequiredService<FeaturesValidator>();
+    var featuresResult = await featuresValidator.Validate(commonData);
+    var threatsValidator = host.Services.GetRequiredService<ThreatsValidator>();
+    var threatsResult = await threatsValidator.Validate(commonData);
 
     // validate controls
 

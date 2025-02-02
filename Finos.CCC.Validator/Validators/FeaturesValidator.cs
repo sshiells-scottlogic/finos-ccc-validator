@@ -2,36 +2,65 @@
 
 namespace Finos.CCC.Validator.Validators;
 
-internal interface IFeaturesValidator : IFileParser
-{
-}
+internal interface IFeaturesValidator : IValidator;
 
 internal class FeaturesValidator : FileParser, IFeaturesValidator
 {
-    public async Task<bool> Validate(string targetDir)
+    public async Task<bool> Validate(CommonData commonData)
     {
-        //var commonFeatures = await ParseYamlFile<CommonFeatures>(Path.Combine(targetDir, "common-features.yaml"));
-
-        //var commonFeatureMap = commonFeatures.Features.ToDictionary(x => x.Id, x => x.Description);
-
-        //var featureFiles = await ParseYamlFiles<FeaturesFile>(targetDir, "features.yaml");
-
         var valid = true;
-
-        //foreach (var featureFile in featureFiles)
-        //{
-        //    valid &= ValidateFeature(featureFile.Key, featureFile.Value, commonFeatureMap);
-        //}
+        foreach (var file in commonData.MetaData)
+        {
+            valid &= await ValidateFeature(file.Key, file.Value, commonData);
+        }
 
         return valid;
     }
 
-    private bool ValidateFeature(string filename, FeaturesFile file, Dictionary<string, string> commonFeatureMap)
+    private async Task<bool> ValidateFeature(string filePath, Metadata metadata, CommonData commonData)
     {
-        Console.WriteLine($"Validating file : {filename}");
+        var valid = true;
+        var fullFilePath = Path.Combine(filePath, "features.yaml");
+        var featureFile = await ParseYamlFile<FeaturesFile>(fullFilePath);
 
-        //
+        Console.WriteLine($"Validation of {fullFilePath} Started");
 
-        return true;
+        valid &= ValidateCommonFeatures(featureFile, commonData);
+        valid &= ValidateFeatureId(featureFile, metadata);
+
+        Console.WriteLine($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}");
+        return valid;
+    }
+
+    private bool ValidateCommonFeatures(FeaturesFile file, CommonData commonData)
+    {
+        var valid = true;
+
+        foreach (var feature in file.CommonFeatures)
+        {
+            if (!commonData.Features.Contains(feature))
+            {
+                Console.WriteLine($"ERROR: Feature {feature} is not a valid common feature");
+                valid = false;
+            }
+        }
+
+        return valid;
+    }
+
+    private bool ValidateFeatureId(FeaturesFile file, Metadata metadata)
+    {
+        var valid = true;
+
+        foreach (var feature in file.Features)
+        {
+            if (!feature.Id.StartsWith(metadata.Id))
+            {
+                Console.WriteLine($"ERROR: Feature {feature} does not match Id {metadata.Id} specified in Metadata file.");
+                valid = false;
+            }
+        }
+
+        return valid;
     }
 }
