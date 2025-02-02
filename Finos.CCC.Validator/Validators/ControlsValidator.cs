@@ -32,6 +32,7 @@ internal class ControlsValidator : FileParser, IControlsValidator
 
         valid &= ValidateCommonControls(controlFile, commonData);
         valid &= ValidateControlsId(controlFile, metadata);
+        valid &= ValidateTestRequirements(controlFile);
 
         var threatsFilePath = Path.Combine(filePath, "threats.yaml");
 
@@ -103,6 +104,25 @@ internal class ControlsValidator : FileParser, IControlsValidator
                 if (!validThreats.Contains(threat))
                 {
                     Console.WriteLine($"ERROR: {control.Id} contains an invalid threat: {threat}.");
+                    valid = false;
+                }
+            }
+        }
+
+        return valid;
+    }
+
+    private bool ValidateTestRequirements(ControlsFile file)
+    {
+        var valid = true;
+
+        foreach (var control in file.Controls)
+        {
+            foreach (var testRequirement in control.TestRequirements)
+            {
+                if (!testRequirement.Id.StartsWith(control.Id))
+                {
+                    Console.WriteLine($"ERROR: Test Requirement {testRequirement.Id} doesn't start with control Id: {control.Id}.");
                     valid = false;
                 }
             }
