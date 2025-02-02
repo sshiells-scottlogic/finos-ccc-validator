@@ -29,21 +29,24 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
 
         var threatFile = await ParseYamlFile<ThreatsFile>(fullFilePath);
 
-        Console.WriteLine($"Validation of {fullFilePath} Started");
+        Console.WriteLine($"Validation of {fullFilePath} Started.");
 
         valid &= ValidateCommonThreats(threatFile, commonData);
         valid &= ValidateThreatId(threatFile, metadata);
 
         var featuresFilePath = Path.Combine(filePath, "features.yaml");
 
-        if (!File.Exists(featuresFilePath))
+        if (File.Exists(featuresFilePath))
         {
             var featuresFile = await ParseYamlFile<FeaturesFile>(featuresFilePath);
             valid &= ValidateFeatures(threatFile, featuresFile);
+        }
+        else
+        {
             Console.WriteLine($"{featuresFilePath} not found - skipping features validation.");
         }
 
-        Console.WriteLine($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}");
+        Console.WriteLine($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}.");
         return valid;
     }
 
@@ -55,7 +58,7 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
         {
             if (!commonData.Threats.Contains(threat))
             {
-                Console.WriteLine($"ERROR: Threat {threat} is not a valid common threat");
+                Console.WriteLine($"ERROR: Threat {threat} is not a valid common threat.");
                 valid = false;
             }
         }
@@ -88,8 +91,16 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
     {
         var valid = true;
 
+        if (file.Threats == null)
+        {
+            return valid;
+        }
+
         var validFeatures = featuresFile.CommonFeatures.ToList();
-        validFeatures.AddRange(featuresFile.Features.Select(x => x.Id));
+        if (featuresFile.Features != null)
+        {
+            validFeatures.AddRange(featuresFile.Features.Select(x => x.Id));
+        }
 
         foreach (var threat in file.Threats)
         {
@@ -97,7 +108,7 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
             {
                 if (!validFeatures.Contains(feature))
                 {
-                    Console.WriteLine($"ERROR: {threat} contains an invalid feature: {feature}.");
+                    Console.WriteLine($"ERROR: {threat.Id} contains an invalid feature: {feature}.");
                     valid = false;
                 }
             }

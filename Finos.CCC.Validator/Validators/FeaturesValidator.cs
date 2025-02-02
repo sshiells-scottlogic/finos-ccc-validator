@@ -23,12 +23,12 @@ internal class FeaturesValidator : FileParser, IFeaturesValidator
         var fullFilePath = Path.Combine(filePath, "features.yaml");
         var featureFile = await ParseYamlFile<FeaturesFile>(fullFilePath);
 
-        Console.WriteLine($"Validation of {fullFilePath} Started");
+        Console.WriteLine($"Validation of {fullFilePath} Started.");
 
         valid &= ValidateCommonFeatures(featureFile, commonData);
         valid &= ValidateFeatureId(featureFile, metadata);
 
-        Console.WriteLine($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}");
+        Console.WriteLine($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}.");
         return valid;
     }
 
@@ -40,7 +40,7 @@ internal class FeaturesValidator : FileParser, IFeaturesValidator
         {
             if (!commonData.Features.Contains(feature))
             {
-                Console.WriteLine($"ERROR: Feature {feature} is not a valid common feature");
+                Console.WriteLine($"ERROR: Feature {feature} is not a valid common feature.");
                 valid = false;
             }
         }

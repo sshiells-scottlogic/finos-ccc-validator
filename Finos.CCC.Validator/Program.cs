@@ -15,6 +15,7 @@ builder.Services.AddSingleton<CommonThreatsValidator>();
 builder.Services.AddSingleton<CommonControlsValidator>();
 builder.Services.AddSingleton<FeaturesValidator>();
 builder.Services.AddSingleton<ThreatsValidator>();
+builder.Services.AddSingleton<ControlsValidator>();
 builder.Services.AddSingleton<MetadataReader>();
 
 using IHost host = builder.Build();
@@ -39,8 +40,6 @@ await host.RunAsync();
 
 static async ValueTask StartAnalysisAsync(ActionInputs inputs, IHost host)
 {
-    var isValid = true;
-
     var commonFeatureValidator = host.Services.GetRequiredService<CommonFeaturesValidator>();
     var commonFeaturesResult = await commonFeatureValidator.Validate(inputs.TargetDir);
     var commonThreatsValidator = host.Services.GetRequiredService<CommonThreatsValidator>();
@@ -63,8 +62,15 @@ static async ValueTask StartAnalysisAsync(ActionInputs inputs, IHost host)
     var featuresResult = await featuresValidator.Validate(commonData);
     var threatsValidator = host.Services.GetRequiredService<ThreatsValidator>();
     var threatsResult = await threatsValidator.Validate(commonData);
+    var controlsValidator = host.Services.GetRequiredService<ControlsValidator>();
+    var controlsResult = await controlsValidator.Validate(commonData);
 
-    // validate controls
+    var isValid = commonFeaturesResult.IsSuccess
+        && commonThreatsResult.IsSuccess
+        && commonControlsResult.IsSuccess
+        && featuresResult
+        && threatsResult
+        && controlsResult;
 
     Environment.Exit(isValid ? 0 : 1);
 }
