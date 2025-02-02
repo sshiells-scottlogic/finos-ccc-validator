@@ -7,4 +7,6 @@ internal record Control
     public required string Title { get; set; }
 
     public required List<string> Threats { get; set; }
+
+    public required List<TestRequirement> TestRequirements { get; set; }
 }
