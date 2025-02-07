@@ -13,6 +13,6 @@ LABEL com.github.actions.description="A GitHub action to validate the content th
 LABEL com.github.actions.icon="check-square"
 LABEL com.github.actions.color="blue"
 
-FROM mcr.microsoft.com/dotnet/runtime:9.0
+FROM mcr.microsoft.com/dotnet/sdk:9.0
 COPY --from=build-env /app/out .
 ENTRYPOINT ["dotnet", "Finos.CCC.Validator.dll"]
