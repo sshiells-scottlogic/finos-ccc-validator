@@ -2,10 +2,6 @@ name: "FINOS CCC Validator"
 description: "A GitHub action to validate the content the services listed under the FINOS Common Cloud Controls (CCC) project."
 author: "Stevie Shiells"
 
-runs:
-  using: "docker"
-  image: "Dockerfile" # Points to Dockerfile in the root directory
-
 branding:
   icon: "check-square"
   color: "blue"
@@ -14,3 +10,10 @@ inputs:
   targetDir:
     description: "File directory path the root for the services directory"
     required: true
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+  - '-t'
+  - ${{ inputs.targetDir }}
