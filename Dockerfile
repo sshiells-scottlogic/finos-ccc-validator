@@ -15,4 +15,4 @@ LABEL com.github.actions.color="blue"
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0
 COPY --from=build-env /app/out .
-ENTRYPOINT ["dotnet", "Finos.CCC.Validator.dll"]
+ENTRYPOINT ["dotnet", "/Finos.CCC.Validator.dll"]
