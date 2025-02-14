@@ -52,9 +52,9 @@ static async ValueTask StartAnalysisAsync(ActionInputs inputs, IHost host)
 
     var commonData = new CommonData
     {
-        Controls = commonControlsResult.Value,
-        Features = commonFeaturesResult.Value,
-        Threats = commonThreatsResult.Value,
+        Controls = commonControlsResult.Ids,
+        Features = commonFeaturesResult.Ids,
+        Threats = commonThreatsResult.Ids,
         MetaData = metadata
     };
 
@@ -65,12 +65,28 @@ static async ValueTask StartAnalysisAsync(ActionInputs inputs, IHost host)
     var controlsValidator = host.Services.GetRequiredService<ControlsValidator>();
     var controlsResult = await controlsValidator.Validate(commonData);
 
-    var isValid = commonFeaturesResult.IsSuccess
-        && commonThreatsResult.IsSuccess
-        && commonControlsResult.IsSuccess
-        && featuresResult
-        && threatsResult
-        && controlsResult;
+    var isValid = commonFeaturesResult.Valid
+        && commonThreatsResult.Valid
+        && commonControlsResult.Valid
+        && featuresResult.Valid
+        && threatsResult.Valid
+        && controlsResult.Valid;
+
+    var errorCount = commonFeaturesResult.ErrorCount
+        + commonThreatsResult.ErrorCount
+        + commonControlsResult.ErrorCount
+        + featuresResult.ErrorCount
+        + threatsResult.ErrorCount
+        + controlsResult.ErrorCount;
+
+    if (isValid)
+    {
+        ConsoleWriter.WriteSuccess("Validation Completed Successfully.");
+    }
+    else
+    {
+        ConsoleWriter.WriteError($"Validation Failed with {errorCount} error(s).");
+    }
 
     Environment.Exit(isValid ? 0 : 1);
 }

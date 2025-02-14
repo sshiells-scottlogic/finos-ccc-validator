@@ -4,5 +4,5 @@ namespace Finos.CCC.Validator.Validators;
 
 internal interface IValidator
 {
-    Task<bool> Validate(CommonData commonData);
+    Task<BoolResult> Validate(CommonData commonData);
 }

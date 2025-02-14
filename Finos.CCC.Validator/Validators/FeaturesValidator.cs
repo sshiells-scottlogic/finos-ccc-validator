@@ -6,61 +6,79 @@ internal interface IFeaturesValidator : IValidator;
 
 internal class FeaturesValidator : FileParser, IFeaturesValidator
 {
-    public async Task<bool> Validate(CommonData commonData)
+    public async Task<BoolResult> Validate(CommonData commonData)
     {
         var valid = true;
+        var errorCount = 0;
         foreach (var file in commonData.MetaData)
         {
-            valid &= await ValidateFeature(file.Key, file.Value, commonData);
+            var result = await ValidateFeature(file.Key, file.Value, commonData);
+            valid &= result.Valid;
+            errorCount += result.ErrorCount;
         }
 
-        return valid;
+        return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private async Task<bool> ValidateFeature(string filePath, Metadata metadata, CommonData commonData)
+    private async Task<BoolResult> ValidateFeature(string filePath, Metadata metadata, CommonData commonData)
     {
         var valid = true;
+        var errorCount = 0;
         var fullFilePath = Path.Combine(filePath, "features.yaml");
         var featureFile = await ParseYamlFile<FeaturesFile>(fullFilePath);
 
         Console.WriteLine($"Validation of {fullFilePath} Started.");
 
-        valid &= ValidateCommonFeatures(featureFile, commonData);
-        valid &= ValidateFeatureId(featureFile, metadata);
+        var commonResult = ValidateCommonFeatures(featureFile, commonData);
+        var idResult = ValidateFeatureId(featureFile, metadata);
 
-        Console.WriteLine($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}.");
-        return valid;
+        valid &= commonResult.Valid && idResult.Valid;
+        errorCount += commonResult.ErrorCount + idResult.ErrorCount;
+
+        if (valid)
+        {
+            Console.WriteLine($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}.");
+        }
+        else
+        {
+            ConsoleWriter.WriteError($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}.");
+        }
+        return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private bool ValidateCommonFeatures(FeaturesFile file, CommonData commonData)
+    private BoolResult ValidateCommonFeatures(FeaturesFile file, CommonData commonData)
     {
         var valid = true;
+        var errorCount = 0;
 
         foreach (var feature in file.CommonFeatures)
         {
             if (!commonData.Features.Contains(feature))
             {
-                Console.WriteLine($"ERROR: Feature {feature} is not a valid common feature.");
+                ConsoleWriter.WriteError($"ERROR: Feature {feature} is not a valid common feature.");
                 valid = false;
+                errorCount++;
             }
         }
 
-        return valid;
+        return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private bool ValidateFeatureId(FeaturesFile file, Metadata metadata)
+    private BoolResult ValidateFeatureId(FeaturesFile file, Metadata metadata)
     {
         var valid = true;
+        var errorCount = 0;
 
         foreach (var feature in file.Features)
         {
             if (!feature.Id.StartsWith(metadata.Id))
             {
-                Console.WriteLine($"ERROR: Feature {feature} does not match Id {metadata.Id} specified in Metadata file.");
+                ConsoleWriter.WriteError($"ERROR: Feature {feature} does not match Id {metadata.Id} specified in Metadata file.");
                 valid = false;
+                errorCount++;
             }
         }
 
-        return valid;
+        return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 }

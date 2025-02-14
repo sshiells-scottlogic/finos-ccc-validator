@@ -5,91 +5,112 @@ namespace Finos.CCC.Validator.Validators;
 internal interface IControlsValidator : IValidator;
 internal class ControlsValidator : FileParser, IControlsValidator
 {
-    public async Task<bool> Validate(CommonData commonData)
+    public async Task<BoolResult> Validate(CommonData commonData)
     {
         var valid = true;
+        var errorCount = 0;
         foreach (var file in commonData.MetaData)
         {
-            valid &= await ValidateControl(file.Key, file.Value, commonData);
+            var controlResult = await ValidateControl(file.Key, file.Value, commonData);
+            valid &= controlResult.Valid;
+            errorCount += controlResult.ErrorCount;
         }
 
-        return valid;
+        return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private async Task<bool> ValidateControl(string filePath, Metadata metadata, CommonData commonData)
+    private async Task<BoolResult> ValidateControl(string filePath, Metadata metadata, CommonData commonData)
     {
         var valid = true;
+        var errorCount = 0;
         var fullFilePath = Path.Combine(filePath, "controls.yaml");
         if (!File.Exists(fullFilePath))
         {
             Console.WriteLine($"{fullFilePath} not found.");
-            return true;
+            return new BoolResult { Valid = valid, ErrorCount = errorCount };
         }
 
         var controlFile = await ParseYamlFile<ControlsFile>(fullFilePath);
 
         Console.WriteLine($"Validation of {fullFilePath} Started.");
 
-        valid &= ValidateCommonControls(controlFile, commonData);
-        valid &= ValidateControlsId(controlFile, metadata);
-        valid &= ValidateTestRequirements(controlFile);
+        var commonControlsResult = ValidateCommonControls(controlFile, commonData);
+        var idsResult = ValidateControlsId(controlFile, metadata);
+        var testRequirementsResult = ValidateTestRequirements(controlFile);
+
+        valid &= commonControlsResult.Valid && idsResult.Valid && testRequirementsResult.Valid;
+        errorCount += commonControlsResult.ErrorCount + idsResult.ErrorCount + testRequirementsResult.ErrorCount;
 
         var threatsFilePath = Path.Combine(filePath, "threats.yaml");
 
         if (File.Exists(threatsFilePath))
         {
             var threatsFile = await ParseYamlFile<ThreatsFile>(threatsFilePath);
-            valid &= ValidateThreats(controlFile, threatsFile);
+            var threatsResult = ValidateThreats(controlFile, threatsFile);
+            valid &= threatsResult.Valid;
+            errorCount += threatsResult.ErrorCount;
         }
         else
         {
             Console.WriteLine($"{threatsFilePath} not found - skipping threats validation.");
         }
 
-        Console.WriteLine($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}.");
-        return valid;
+        if (valid)
+        {
+            Console.WriteLine($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}.");
+        }
+        else
+        {
+            ConsoleWriter.WriteError($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}.");
+        }
+        return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private bool ValidateCommonControls(ControlsFile file, CommonData commonData)
+    private BoolResult ValidateCommonControls(ControlsFile file, CommonData commonData)
     {
         var valid = true;
+        var errorCount = 0;
 
         foreach (var control in file.CommonControls)
         {
             if (!commonData.Controls.Contains(control))
             {
-                Console.WriteLine($"ERROR: Control {control} is not a valid common control.");
+                ConsoleWriter.WriteError($"ERROR: Control {control} is not a valid common control.");
                 valid = false;
+                errorCount++;
             }
         }
 
-        return valid;
+        return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private bool ValidateControlsId(ControlsFile file, Metadata metadata)
+    private BoolResult ValidateControlsId(ControlsFile file, Metadata metadata)
     {
         var valid = true;
+        var errorCount = 0;
 
         if (file.Controls == null)
         {
-            return valid;
+            return new BoolResult { Valid = valid, ErrorCount = errorCount };
         }
 
         foreach (var control in file.Controls)
         {
             if (!control.Id.StartsWith(metadata.Id))
             {
-                Console.WriteLine($"ERROR: Control {control} does not match Id {metadata.Id} specified in Metadata file.");
+                ConsoleWriter.WriteError($"ERROR: Control {control} does not match Id {metadata.Id} specified in Metadata file.");
                 valid = false;
+                errorCount++;
             }
         }
 
-        return valid;
+        return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private bool ValidateThreats(ControlsFile file, ThreatsFile threatsFile)
+    private BoolResult ValidateThreats(ControlsFile file, ThreatsFile threatsFile)
     {
         var valid = true;
+        var errorCount = 0;
 
         var validThreats = threatsFile.CommonThreats.ToList();
         if (threatsFile.Threats != null)
@@ -103,18 +124,20 @@ internal class ControlsValidator : FileParser, IControlsValidator
             {
                 if (!validThreats.Contains(threat))
                 {
-                    Console.WriteLine($"ERROR: {control.Id} contains an invalid threat: {threat}.");
+                    ConsoleWriter.WriteError($"ERROR: {control.Id} contains an invalid threat: {threat}.");
                     valid = false;
+                    errorCount++;
                 }
             }
         }
 
-        return valid;
+        return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private bool ValidateTestRequirements(ControlsFile file)
+    private BoolResult ValidateTestRequirements(ControlsFile file)
     {
         var valid = true;
+        var errorCount = 0;
 
         foreach (var control in file.Controls)
         {
@@ -124,10 +147,11 @@ internal class ControlsValidator : FileParser, IControlsValidator
                 {
                     Console.WriteLine($"ERROR: Test Requirement {testRequirement.Id} doesn't start with control Id: {control.Id}.");
                     valid = false;
+                    errorCount++;
                 }
             }
         }
 
-        return valid;
+        return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 }

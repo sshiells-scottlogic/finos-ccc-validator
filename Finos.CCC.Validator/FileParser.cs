@@ -2,7 +2,6 @@
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace Finos.CCC.Validator;
-
 public interface IFileParser
 {
     Task<T> ParseYamlFile<T>(string filename);
