@@ -145,7 +145,7 @@ internal class ControlsValidator : FileParser, IControlsValidator
             {
                 if (!testRequirement.Id.StartsWith(control.Id))
                 {
-                    Console.WriteLine($"ERROR: Test Requirement {testRequirement.Id} doesn't start with control Id: {control.Id}.");
+                    ConsoleWriter.WriteError($"ERROR: Test Requirement {testRequirement.Id} doesn't start with control Id: {control.Id}.");
                     valid = false;
                     errorCount++;
                 }
