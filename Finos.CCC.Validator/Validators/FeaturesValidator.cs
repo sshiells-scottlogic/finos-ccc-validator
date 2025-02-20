@@ -25,6 +25,11 @@ internal class FeaturesValidator : FileParser, IFeaturesValidator
         var valid = true;
         var errorCount = 0;
         var fullFilePath = Path.Combine(filePath, "features.yaml");
+        if (!File.Exists(fullFilePath))
+        {
+            Console.WriteLine($"{fullFilePath} not found.");
+            return new BoolResult { Valid = valid, ErrorCount = errorCount };
+        }
         var featureFile = await ParseYamlFile<FeaturesFile>(fullFilePath);
 
         Console.WriteLine($"Validation of {fullFilePath} Started.");
