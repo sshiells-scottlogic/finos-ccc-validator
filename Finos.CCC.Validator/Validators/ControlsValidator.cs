@@ -46,7 +46,7 @@ internal class ControlsValidator : FileParser, IControlsValidator
         if (File.Exists(threatsFilePath))
         {
             var threatsFile = await ParseYamlFile<ThreatsFile>(threatsFilePath);
-            var threatsResult = ValidateThreats(controlFile, threatsFile);
+            var threatsResult = ValidateThreats(controlFile, threatsFile, threatsFilePath);
             valid &= threatsResult.Valid;
             errorCount += threatsResult.ErrorCount;
         }
@@ -107,7 +107,7 @@ internal class ControlsValidator : FileParser, IControlsValidator
         return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private BoolResult ValidateThreats(ControlsFile file, ThreatsFile threatsFile)
+    private BoolResult ValidateThreats(ControlsFile file, ThreatsFile threatsFile, string threatsFilePath)
     {
         var valid = true;
         var errorCount = 0;
@@ -124,7 +124,7 @@ internal class ControlsValidator : FileParser, IControlsValidator
             {
                 if (!validThreats.Contains(threat))
                 {
-                    ConsoleWriter.WriteError($"ERROR: {control.Id} contains an invalid threat: {threat}.");
+                    ConsoleWriter.WriteError($"ERROR: {control.Id} contains an invalid threat: {threat}. Threat {threat} was not listed in {threatsFilePath}.");
                     valid = false;
                     errorCount++;
                 }

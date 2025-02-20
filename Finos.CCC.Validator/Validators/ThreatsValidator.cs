@@ -47,7 +47,7 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
         if (File.Exists(featuresFilePath))
         {
             var featuresFile = await ParseYamlFile<FeaturesFile>(featuresFilePath);
-            var featureResult = ValidateFeatures(threatFile, featuresFile);
+            var featureResult = ValidateFeatures(threatFile, featuresFile, featuresFilePath);
             valid &= featureResult.Valid;
             errorCount += featureResult.ErrorCount;
         }
@@ -108,7 +108,7 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
         return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private BoolResult ValidateFeatures(ThreatsFile file, FeaturesFile featuresFile)
+    private BoolResult ValidateFeatures(ThreatsFile file, FeaturesFile featuresFile, string featuresFilePath)
     {
         var valid = true;
         var errorCount = 0;
@@ -130,7 +130,7 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
             {
                 if (!validFeatures.Contains(feature))
                 {
-                    ConsoleWriter.WriteError($"ERROR: {threat.Id} contains an invalid feature: {feature}.");
+                    ConsoleWriter.WriteError($"ERROR: {threat.Id} contains an invalid feature: {feature}. Feature {feature} is not listed in {featuresFilePath}.");
                     valid = false;
                     errorCount++;
                 }
