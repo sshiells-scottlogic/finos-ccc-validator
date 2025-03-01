@@ -41,11 +41,11 @@ await host.RunAsync();
 static async ValueTask StartAnalysisAsync(ActionInputs inputs, IHost host)
 {
     var commonFeatureValidator = host.Services.GetRequiredService<CommonFeaturesValidator>();
-    var commonFeaturesResult = await commonFeatureValidator.Validate(inputs.TargetDir);
+    var commonFeaturesResult = await commonFeatureValidator.Validate(inputs.TargetDir, []);
     var commonThreatsValidator = host.Services.GetRequiredService<CommonThreatsValidator>();
-    var commonThreatsResult = await commonThreatsValidator.Validate(inputs.TargetDir);
+    var commonThreatsResult = await commonThreatsValidator.Validate(inputs.TargetDir, commonFeaturesResult.Ids);
     var commonControlsValidator = host.Services.GetRequiredService<CommonControlsValidator>();
-    var commonControlsResult = await commonControlsValidator.Validate(inputs.TargetDir);
+    var commonControlsResult = await commonControlsValidator.Validate(inputs.TargetDir, commonThreatsResult.Ids);
 
     var metadataReader = host.Services.GetRequiredService<MetadataReader>();
     var metadata = await metadataReader.LoadMetaData(inputs.TargetDir);

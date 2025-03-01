@@ -5,7 +5,7 @@ namespace Finos.CCC.Validator.Validators;
 
 public interface ICommonItemValidator<TCommonItem, TItem>
 {
-    Task<IdResult> Validate(string targetDir);
+    Task<IdResult> Validate(string targetDir, IList<string> relatedCommonItems);
 }
 internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, ICommonItemValidator<TCommonItem, TItem>
 {
@@ -15,7 +15,9 @@ internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, IC
     internal abstract IEnumerable<TItem> GetItems(TCommonItem commonItem);
 
     internal abstract string GetId(TItem item);
-    public async Task<IdResult> Validate(string targetDir)
+
+    internal abstract BoolResult ValidateRelatedCommonItems(IList<TItem> itemsToValidate, IList<string> relatedCommonItems);
+    public async Task<IdResult> Validate(string targetDir, IList<string> relastedCommonItems)
     {
         Console.WriteLine($"Validation of Common {Description} Started");
 
@@ -23,7 +25,8 @@ internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, IC
         var errorCount = 0;
 
         var commonItem = await ParseYamlFile<TCommonItem>(Path.Combine(targetDir, Filename));
-        var ids = GetItems(commonItem).Select(GetId).ToList();
+        var commonItems = GetItems(commonItem).ToList();
+        var ids = commonItems.Select(GetId).ToList();
 
         var grouped = ids.GroupBy(x => x).Where(x => x.Count() > 1);
 
@@ -37,6 +40,11 @@ internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, IC
                 errorCount++;
             }
         }
+
+        var additionalValidations = ValidateRelatedCommonItems(commonItems, relastedCommonItems);
+        isValid &= additionalValidations.Valid;
+        errorCount += additionalValidations.ErrorCount;
+
 
         if (isValid)
         {
