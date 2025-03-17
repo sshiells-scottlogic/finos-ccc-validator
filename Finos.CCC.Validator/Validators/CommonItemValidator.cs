@@ -7,16 +7,14 @@ public interface ICommonItemValidator<TCommonItem, TItem>
 {
     Task<IdResult> Validate(string targetDir, IList<string> relatedCommonItems);
 }
-internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, ICommonItemValidator<TCommonItem, TItem>
+internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, ICommonItemValidator<TCommonItem, TItem> where TItem : BaseItem
 {
     public abstract string Filename { get; }
     public abstract string Description { get; }
 
     internal abstract IEnumerable<TItem> GetItems(TCommonItem commonItem);
 
-    internal abstract string GetId(TItem item);
-
-    internal abstract BoolResult ValidateRelatedCommonItems(IList<TItem> itemsToValidate, IList<string> relatedCommonItems);
+    internal abstract BoolResult ValidateRelatedCommonItems(IList<TItem> itemsToValidate, IList<BaseItem> relatedCommonItems);
     public async Task<IdResult> Validate(string targetDir, IList<string> relastedCommonItems)
     {
         Console.WriteLine($"Validation of Common {Description} Started");
@@ -26,9 +24,8 @@ internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, IC
 
         var commonItem = await ParseYamlFile<TCommonItem>(Path.Combine(targetDir, Filename));
         var commonItems = GetItems(commonItem).ToList();
-        var ids = commonItems.Select(GetId).ToList();
 
-        var grouped = ids.GroupBy(x => x).Where(x => x.Count() > 1);
+        var grouped = commonItems.GroupBy(x => x.Id).Where(x => x.Count() > 1);
 
         if (grouped.Any())
         {
@@ -55,6 +52,13 @@ internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, IC
             ConsoleWriter.WriteError($"Validation of Common {Description} Complete. Status: {isValid.ToPassOrFail()}");
         }
 
-        return new IdResult { Ids = ids, ErrorCount = errorCount, Valid = isValid };
+        var baseItems = GetBaseItems(commonItems);
+
+        return new IdResult { Ids = baseItems, ErrorCount = errorCount, Valid = isValid };
+    }
+
+    private List<BaseItem> GetBaseItems(List<TItem> commonItems)
+    {
+        return commonItems.Select(x => x as BaseItem).ToList();
     }
 }

@@ -8,8 +8,6 @@ internal class CommonControlsValidator : CommonItemValidator<CommonControls, Con
 
     public override string Description => "Controls";
 
-    internal override string GetId(Control item) => item.Id;
-
     internal override IEnumerable<Control> GetItems(CommonControls commonItem) => commonItem.Controls;
 
     internal override BoolResult ValidateRelatedCommonItems(IList<Control> itemsToValidate, IList<string> relatedCommonItems)

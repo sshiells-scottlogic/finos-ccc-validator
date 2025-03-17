@@ -71,9 +71,11 @@ internal class ControlsValidator : FileParser, IControlsValidator
         var valid = true;
         var errorCount = 0;
 
+        var commonIds = commonData.Controls.Select(control => control.Id).ToList();
+
         foreach (var control in file.CommonControls)
         {
-            if (!commonData.Controls.Contains(control))
+            if (!commonIds.Contains(control))
             {
                 ConsoleWriter.WriteError($"ERROR: Control {control} is not a valid common control.");
                 valid = false;

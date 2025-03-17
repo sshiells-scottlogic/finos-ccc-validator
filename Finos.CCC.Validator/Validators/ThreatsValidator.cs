@@ -72,9 +72,11 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
         var valid = true;
         var errorCount = 0;
 
+        var commonIds = commonData.Threats.Select(x => x.Id).ToList();
+
         foreach (var threat in file.CommonThreats)
         {
-            if (!commonData.Threats.Contains(threat))
+            if (!commonIds.Contains(threat))
             {
                 ConsoleWriter.WriteError($"ERROR: Threat {threat} is not a valid common threat.");
                 valid = false;

@@ -56,9 +56,11 @@ internal class FeaturesValidator : FileParser, IFeaturesValidator
         var valid = true;
         var errorCount = 0;
 
+        var commonIds = commonData.Features.Select(x => x.Id).ToList();
+
         foreach (var feature in file.CommonFeatures)
         {
-            if (!commonData.Features.Contains(feature))
+            if (!commonIds.Contains(feature))
             {
                 ConsoleWriter.WriteError($"ERROR: Feature {feature} is not a valid common feature.");
                 valid = false;

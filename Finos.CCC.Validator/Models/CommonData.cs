@@ -4,7 +4,7 @@ internal record CommonData
 {
     public required Dictionary<string, Metadata> MetaData { get; set; }
 
-    public required List<string> Features { get; set; }
-    public required List<string> Threats { get; set; }
-    public required List<string> Controls { get; set; }
+    public required List<BaseItem> Features { get; set; }
+    public required List<BaseItem> Threats { get; set; }
+    public required List<BaseItem> Controls { get; set; }
 }
