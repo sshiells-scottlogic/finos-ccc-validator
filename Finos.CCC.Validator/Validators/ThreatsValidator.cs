@@ -72,7 +72,7 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
         var valid = true;
         var errorCount = 0;
 
-        var commonIds = commonData.Threats.Select(x => x.Id).ToList();
+        var commonIds = commonData.Threats.Select(x => x.Key).ToList();
 
         foreach (var threat in file.CommonThreats)
         {

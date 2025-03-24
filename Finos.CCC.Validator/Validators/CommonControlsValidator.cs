@@ -10,12 +10,12 @@ internal class CommonControlsValidator : CommonItemValidator<CommonControls, Con
 
     internal override IEnumerable<Control> GetItems(CommonControls commonItem) => commonItem.Controls;
 
-    internal override BoolResult ValidateRelatedCommonItems(IList<Control> itemsToValidate, IList<BaseItem> relatedCommonItems)
+    internal override BoolResult ValidateRelatedCommonItems(IList<Control> itemsToValidate, IDictionary<string, BaseItem> relatedCommonItems)
     {
         var valid = true;
         var errorCount = 0;
 
-        var threadIds = relatedCommonItems.Select(x => x.Id).ToList();
+        var threadIds = relatedCommonItems.Select(x => x.Key).ToList();
 
         foreach (var control in itemsToValidate)
         {

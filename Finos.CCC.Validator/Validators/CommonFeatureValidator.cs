@@ -10,7 +10,7 @@ internal class CommonFeaturesValidator : CommonItemValidator<CommonFeatures, Fea
 
     internal override IEnumerable<Feature> GetItems(CommonFeatures commonItem) => commonItem.Features;
 
-    internal override BoolResult ValidateRelatedCommonItems(IList<Feature> itemsToValidate, IList<BaseItem> relatedCommonItems)
+    internal override BoolResult ValidateRelatedCommonItems(IList<Feature> itemsToValidate, IDictionary<string, BaseItem> relatedCommonItems)
     {
         return new BoolResult { Valid = true, ErrorCount = 0 };
     }

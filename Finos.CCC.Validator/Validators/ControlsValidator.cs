@@ -71,7 +71,7 @@ internal class ControlsValidator : FileParser, IControlsValidator
         var valid = true;
         var errorCount = 0;
 
-        var commonIds = commonData.Controls.Select(control => control.Id).ToList();
+        var commonIds = commonData.Controls.Select(control => control.Key).ToList();
 
         foreach (var control in file.CommonControls)
         {

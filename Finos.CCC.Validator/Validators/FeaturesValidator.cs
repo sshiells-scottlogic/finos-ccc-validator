@@ -56,7 +56,7 @@ internal class FeaturesValidator : FileParser, IFeaturesValidator
         var valid = true;
         var errorCount = 0;
 
-        var commonIds = commonData.Features.Select(x => x.Id).ToList();
+        var commonIds = commonData.Features.Select(x => x.Key).ToList();
 
         foreach (var feature in file.CommonFeatures)
         {
