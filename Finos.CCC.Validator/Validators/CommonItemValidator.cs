@@ -5,7 +5,7 @@ namespace Finos.CCC.Validator.Validators;
 
 public interface ICommonItemValidator<TCommonItem, TItem>
 {
-    Task<IdResult> Validate(string targetDir, IList<string> relatedCommonItems);
+    Task<IdResult> Validate(string targetDir, IList<BaseItem> relatedCommonItems);
 }
 internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, ICommonItemValidator<TCommonItem, TItem> where TItem : BaseItem
 {
@@ -15,7 +15,7 @@ internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, IC
     internal abstract IEnumerable<TItem> GetItems(TCommonItem commonItem);
 
     internal abstract BoolResult ValidateRelatedCommonItems(IList<TItem> itemsToValidate, IList<BaseItem> relatedCommonItems);
-    public async Task<IdResult> Validate(string targetDir, IList<string> relastedCommonItems)
+    public async Task<IdResult> Validate(string targetDir, IList<BaseItem> relatedCommonItems)
     {
         Console.WriteLine($"Validation of Common {Description} Started");
 
@@ -38,7 +38,7 @@ internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, IC
             }
         }
 
-        var additionalValidations = ValidateRelatedCommonItems(commonItems, relastedCommonItems);
+        var additionalValidations = ValidateRelatedCommonItems(commonItems, relatedCommonItems);
         isValid &= additionalValidations.Valid;
         errorCount += additionalValidations.ErrorCount;
 

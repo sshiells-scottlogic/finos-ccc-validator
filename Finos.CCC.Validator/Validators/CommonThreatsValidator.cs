@@ -8,20 +8,20 @@ internal class CommonThreatsValidator : CommonItemValidator<CommonThreats, Threa
 
     public override string Description => "Threats";
 
-    internal override string GetId(Threat item) => item.Id;
-
     internal override IEnumerable<Threat> GetItems(CommonThreats commonItem) => commonItem.Threats;
 
-    internal override BoolResult ValidateRelatedCommonItems(IList<Threat> itemsToValidate, IList<string> relatedCommonItems)
+    internal override BoolResult ValidateRelatedCommonItems(IList<Threat> itemsToValidate, IList<BaseItem> relatedCommonItems)
     {
         var valid = true;
         var errorCount = 0;
+
+        var featureIds = relatedCommonItems.Select(x => x.Id).ToList();
 
         foreach (var threat in itemsToValidate)
         {
             foreach (var feature in threat.Features)
             {
-                if (!relatedCommonItems.Contains(feature))
+                if (!featureIds.Contains(feature))
                 {
                     valid = false;
                     errorCount++;
