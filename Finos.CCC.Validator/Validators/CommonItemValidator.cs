@@ -79,8 +79,8 @@ internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, IC
                 if (line.Contains(id))
                 {
                     var index = line.IndexOf(id);
-                    var rest = line.Substring(index + id.Length).Trim([' ', '#']);
-                    if (rest != relatedCommonItems[id].Title)
+                    var rest = line.Substring(index + id.Length).Trim([' ', '#']).ToLower();
+                    if (rest != relatedCommonItems[id].Title.ToLower())
                     {
                         errorCount++;
                         isValid = false;
