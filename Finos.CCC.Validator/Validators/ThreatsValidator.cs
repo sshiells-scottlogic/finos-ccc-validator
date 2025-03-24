@@ -44,9 +44,11 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
 
         var featuresFilePath = Path.Combine(filePath, "features.yaml");
 
+        FeaturesFile? featuresFile = null;
+
         if (File.Exists(featuresFilePath))
         {
-            var featuresFile = await ParseYamlFile<FeaturesFile>(featuresFilePath);
+            featuresFile = await ParseYamlFile<FeaturesFile>(featuresFilePath);
             var featureResult = ValidateFeatures(threatFile, featuresFile, featuresFilePath);
             valid &= featureResult.Valid;
             errorCount += featureResult.ErrorCount;
@@ -56,7 +58,7 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
             Console.WriteLine($"{featuresFilePath} not found - skipping features validation.");
         }
 
-        var fileResult = ValidateFile(fullFilePath, commonData);
+        var fileResult = ValidateFile(fullFilePath, commonData, featuresFile);
         valid &= fileResult.Valid;
         errorCount += fileResult.ErrorCount;
 
@@ -146,12 +148,19 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
         return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    internal BoolResult ValidateFile(string path, CommonData commonData)
+    internal BoolResult ValidateFile(string path, CommonData commonData, FeaturesFile? featuresFile)
     {
         var isValid = true;
         var errorCount = 0;
 
         var commonDataDict = commonData.ToDictionary();
+        if (featuresFile != null && featuresFile.Features != null)
+        {
+            foreach (var feature in featuresFile.Features)
+            {
+                commonDataDict[feature.Id] = feature;
+            }
+        }
         var ids = commonDataDict.Keys;
 
         foreach (var line in File.ReadLines(path))
@@ -161,8 +170,8 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
                 if (line.Contains(id))
                 {
                     var index = line.IndexOf(id);
-                    var rest = line.Substring(index + id.Length).Trim([' ', '#']).ToLower();
-                    if (rest != commonDataDict[id].Title.ToLower())
+                    var rest = line.Substring(index + id.Length).Trim([' ', '#']);
+                    if (rest.ToLower() != commonDataDict[id].Title.ToLower())
                     {
                         errorCount++;
                         isValid = false;

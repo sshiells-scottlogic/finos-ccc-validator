@@ -108,8 +108,8 @@ internal class FeaturesValidator : FileParser, IFeaturesValidator
                 if (line.Contains(id))
                 {
                     var index = line.IndexOf(id);
-                    var rest = line.Substring(index + id.Length).Trim([' ', '#']).ToLower();
-                    if (rest != commonDataDict[id].Title.ToLower())
+                    var rest = line.Substring(index + id.Length).Trim([' ', '#']);
+                    if (rest.ToLower() != commonDataDict[id].Title.ToLower())
                     {
                         errorCount++;
                         isValid = false;
