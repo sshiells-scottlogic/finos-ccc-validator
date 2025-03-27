@@ -8,20 +8,20 @@ internal class CommonControlsValidator : CommonItemValidator<CommonControls, Con
 
     public override string Description => "Controls";
 
-    internal override string GetId(Control item) => item.Id;
-
     internal override IEnumerable<Control> GetItems(CommonControls commonItem) => commonItem.Controls;
 
-    internal override BoolResult ValidateRelatedCommonItems(IList<Control> itemsToValidate, IList<string> relatedCommonItems)
+    internal override BoolResult ValidateRelatedCommonItems(IList<Control> itemsToValidate, IDictionary<string, BaseItem> relatedCommonItems)
     {
         var valid = true;
         var errorCount = 0;
+
+        var threadIds = relatedCommonItems.Select(x => x.Key).ToList();
 
         foreach (var control in itemsToValidate)
         {
             foreach (var threat in control.Threats)
             {
-                if (!relatedCommonItems.Contains(threat))
+                if (!threadIds.Contains(threat))
                 {
                     valid = false;
                     errorCount++;

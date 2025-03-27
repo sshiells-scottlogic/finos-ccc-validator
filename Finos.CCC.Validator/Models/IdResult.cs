@@ -3,6 +3,6 @@
 public record IdResult
 {
     public bool Valid { get; set; }
-    public List<string> Ids { get; set; }
+    public Dictionary<string, BaseItem> Ids { get; set; }
     public int ErrorCount { get; set; }
 }
