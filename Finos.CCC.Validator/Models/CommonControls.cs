@@ -2,5 +2,5 @@
 
 internal record CommonControls
 {
-    public required List<Control> Controls { get; set; }
+    public required List<ControlFamily> ControlFamilies { get; set; }
 }

@@ -26,39 +26,39 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
         var errorCount = 0;
 
         var fullFilePath = Path.Combine(filePath, "threats.yaml");
+
         if (!File.Exists(fullFilePath))
         {
             Console.WriteLine($"{fullFilePath} not found.");
             return new BoolResult { Valid = valid, ErrorCount = errorCount };
         }
-
         var threatFile = await ParseYamlFile<ThreatsFile>(fullFilePath);
 
         Console.WriteLine($"Validation of {fullFilePath} Started.");
 
-        var commonThreatsResult = ValidateCommonThreats(threatFile, commonData);
+        var sharedThreatsResult = ValidateSharedThreats(threatFile, commonData);
         var threatIdResult = ValidateThreatId(threatFile, metadata);
 
-        valid &= commonThreatsResult.Valid && threatIdResult.Valid;
-        errorCount += commonThreatsResult.ErrorCount + threatIdResult.ErrorCount;
+        valid &= sharedThreatsResult.Valid && threatIdResult.Valid;
+        errorCount += sharedThreatsResult.ErrorCount + threatIdResult.ErrorCount;
 
-        var featuresFilePath = Path.Combine(filePath, "features.yaml");
+        var capabilitiesFilePath = Path.Combine(filePath, "capabilities.yaml");
 
-        FeaturesFile? featuresFile = null;
+        CapabilitiesFile? capabilitiesFile = null;
 
-        if (File.Exists(featuresFilePath))
+        if (File.Exists(capabilitiesFilePath))
         {
-            featuresFile = await ParseYamlFile<FeaturesFile>(featuresFilePath);
-            var featureResult = ValidateFeatures(threatFile, featuresFile, featuresFilePath);
-            valid &= featureResult.Valid;
-            errorCount += featureResult.ErrorCount;
+            capabilitiesFile = await ParseYamlFile<CapabilitiesFile>(capabilitiesFilePath);
+            var capabilityResult = ValidateCapabilities(threatFile, capabilitiesFile, capabilitiesFilePath);
+            valid &= capabilityResult.Valid;
+            errorCount += capabilityResult.ErrorCount;
         }
         else
         {
-            Console.WriteLine($"{featuresFilePath} not found - skipping features validation.");
+            Console.WriteLine($"{capabilitiesFilePath} not found - skipping capabilities validation.");
         }
 
-        var fileResult = ValidateFile(fullFilePath, commonData, featuresFile);
+        var fileResult = ValidateFile(fullFilePath, commonData, capabilitiesFile);
         valid &= fileResult.Valid;
         errorCount += fileResult.ErrorCount;
 
@@ -70,23 +70,29 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
         {
             ConsoleWriter.WriteError($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}.");
         }
+
         return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private BoolResult ValidateCommonThreats(ThreatsFile file, CommonData commonData)
+    private BoolResult ValidateSharedThreats(ThreatsFile file, CommonData commonData)
     {
         var valid = true;
         var errorCount = 0;
 
         var commonIds = commonData.Threats.Select(x => x.Key).ToList();
 
-        foreach (var threat in file.CommonThreats)
+        var cccSharedThreats = file.SharedThreats.FirstOrDefault(x => x.ReferenceId == "CCC");
+
+        if (cccSharedThreats != null)
         {
-            if (!commonIds.Contains(threat))
+            foreach (var threat in cccSharedThreats.Identifiers)
             {
-                ConsoleWriter.WriteError($"ERROR: Threat {threat} is not a valid common threat.");
-                valid = false;
-                errorCount++;
+                if (!commonIds.Contains(threat))
+                {
+                    ConsoleWriter.WriteError($"ERROR: Threat {threat} is not a valid common threat.");
+                    valid = false;
+                    errorCount++;
+                }
             }
         }
 
@@ -116,7 +122,7 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
         return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private BoolResult ValidateFeatures(ThreatsFile file, FeaturesFile featuresFile, string featuresFilePath)
+    private BoolResult ValidateCapabilities(ThreatsFile file, CapabilitiesFile capabilitiesFile, string capabilityFilePath)
     {
         var valid = true;
         var errorCount = 0;
@@ -126,21 +132,26 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
             return new BoolResult { Valid = valid, ErrorCount = errorCount };
         }
 
-        var validFeatures = featuresFile.CommonFeatures.ToList();
-        if (featuresFile.Features != null)
+        var cccSharedCapabilities = capabilitiesFile.SharedCapabilities.FirstOrDefault(x => x.ReferenceId == "CCC");
+        if (cccSharedCapabilities != null)
         {
-            validFeatures.AddRange(featuresFile.Features.Select(x => x.Id));
-        }
+            var validCapabilities = cccSharedCapabilities.Identifiers.ToList();
 
-        foreach (var threat in file.Threats)
-        {
-            foreach (var feature in threat.Features)
+            if (capabilitiesFile.Capabilities != null)
             {
-                if (!validFeatures.Contains(feature))
+                validCapabilities.AddRange(capabilitiesFile.Capabilities.Select(x => x.Id));
+            }
+
+            foreach (var threat in file.Threats)
+            {
+                foreach (var capabilitiy in threat.Capabilities.SelectMany(x => x.Identifiers))
                 {
-                    ConsoleWriter.WriteError($"ERROR: {threat.Id} contains an invalid feature: {feature}. Feature {feature} is not listed in {featuresFilePath}.");
-                    valid = false;
-                    errorCount++;
+                    if (!validCapabilities.Contains(capabilitiy))
+                    {
+                        ConsoleWriter.WriteError($"ERROR: {threat.Id} contains an invalid capability: {capabilitiy}. Capability {capabilitiy} is not listed in {capabilityFilePath}.");
+                        valid = false;
+                        errorCount++;
+                    }
                 }
             }
         }
@@ -148,17 +159,17 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
         return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    internal BoolResult ValidateFile(string path, CommonData commonData, FeaturesFile? featuresFile)
+    internal BoolResult ValidateFile(string path, CommonData commonData, CapabilitiesFile? capabilitiesFile)
     {
         var isValid = true;
         var errorCount = 0;
 
         var commonDataDict = commonData.ToDictionary();
-        if (featuresFile != null && featuresFile.Features != null)
+        if (capabilitiesFile != null && capabilitiesFile.Capabilities != null)
         {
-            foreach (var feature in featuresFile.Features)
+            foreach (var capability in capabilitiesFile.Capabilities)
             {
-                commonDataDict[feature.Id] = feature;
+                commonDataDict[capability.Id] = capability;
             }
         }
         var ids = commonDataDict.Keys;

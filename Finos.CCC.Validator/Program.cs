@@ -10,10 +10,10 @@ using static CommandLine.Parser;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddSingleton<CommonFeaturesValidator>();
+builder.Services.AddSingleton<CommonCapabilitiesValidator>();
 builder.Services.AddSingleton<CommonThreatsValidator>();
 builder.Services.AddSingleton<CommonControlsValidator>();
-builder.Services.AddSingleton<FeaturesValidator>();
+builder.Services.AddSingleton<CapabilitiesValidator>();
 builder.Services.AddSingleton<ThreatsValidator>();
 builder.Services.AddSingleton<ControlsValidator>();
 builder.Services.AddSingleton<MetadataReader>();
@@ -40,10 +40,10 @@ await host.RunAsync();
 
 static async ValueTask StartAnalysisAsync(ActionInputs inputs, IHost host)
 {
-    var commonFeatureValidator = host.Services.GetRequiredService<CommonFeaturesValidator>();
-    var commonFeaturesResult = await commonFeatureValidator.Validate(inputs.TargetDir, new Dictionary<string, BaseItem>());
+    var commonCapabilitiesValidator = host.Services.GetRequiredService<CommonCapabilitiesValidator>();
+    var commonCapabilitiesResult = await commonCapabilitiesValidator.Validate(inputs.TargetDir, new Dictionary<string, BaseItem>());
     var commonThreatsValidator = host.Services.GetRequiredService<CommonThreatsValidator>();
-    var commonThreatsResult = await commonThreatsValidator.Validate(inputs.TargetDir, commonFeaturesResult.Ids);
+    var commonThreatsResult = await commonThreatsValidator.Validate(inputs.TargetDir, commonCapabilitiesResult.Ids);
     var commonControlsValidator = host.Services.GetRequiredService<CommonControlsValidator>();
     var commonControlsResult = await commonControlsValidator.Validate(inputs.TargetDir, commonThreatsResult.Ids);
 
@@ -53,29 +53,29 @@ static async ValueTask StartAnalysisAsync(ActionInputs inputs, IHost host)
     var commonData = new CommonData
     {
         Controls = commonControlsResult.Ids,
-        Features = commonFeaturesResult.Ids,
+        Capabilities = commonCapabilitiesResult.Ids,
         Threats = commonThreatsResult.Ids,
         MetaData = metadata
     };
 
-    var featuresValidator = host.Services.GetRequiredService<FeaturesValidator>();
-    var featuresResult = await featuresValidator.Validate(commonData);
+    var capabilitiesValidator = host.Services.GetRequiredService<CapabilitiesValidator>();
+    var capabilitiesResult = await capabilitiesValidator.Validate(commonData);
     var threatsValidator = host.Services.GetRequiredService<ThreatsValidator>();
     var threatsResult = await threatsValidator.Validate(commonData);
     var controlsValidator = host.Services.GetRequiredService<ControlsValidator>();
     var controlsResult = await controlsValidator.Validate(commonData);
 
-    var isValid = commonFeaturesResult.Valid
+    var isValid = commonCapabilitiesResult.Valid
         && commonThreatsResult.Valid
         && commonControlsResult.Valid
-        && featuresResult.Valid
+        && capabilitiesResult.Valid
         && threatsResult.Valid
         && controlsResult.Valid;
 
-    var errorCount = commonFeaturesResult.ErrorCount
+    var errorCount = commonCapabilitiesResult.ErrorCount
         + commonThreatsResult.ErrorCount
         + commonControlsResult.ErrorCount
-        + featuresResult.ErrorCount
+        + capabilitiesResult.ErrorCount
         + threatsResult.ErrorCount
         + controlsResult.ErrorCount;
 
