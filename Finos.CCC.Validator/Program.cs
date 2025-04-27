@@ -60,8 +60,8 @@ static async ValueTask StartAnalysisAsync(ActionInputs inputs, IHost host)
 
     var capabilitiesValidator = host.Services.GetRequiredService<CapabilitiesValidator>();
     var capabilitiesResult = await capabilitiesValidator.Validate(commonData);
-    //var threatsValidator = host.Services.GetRequiredService<ThreatsValidator>();
-    //var threatsResult = await threatsValidator.Validate(commonData);
+    var threatsValidator = host.Services.GetRequiredService<ThreatsValidator>();
+    var threatsResult = await threatsValidator.Validate(commonData);
     //var controlsValidator = host.Services.GetRequiredService<ControlsValidator>();
     //var controlsResult = await controlsValidator.Validate(commonData);
 
