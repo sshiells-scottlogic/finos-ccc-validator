@@ -2,5 +2,5 @@
 
 internal record Threat : BaseItem
 {
-    public required List<string> Features { get; set; }
+    public required List<ReferenceList> Capabilities { get; set; }
 }

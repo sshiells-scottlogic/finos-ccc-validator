@@ -4,15 +4,14 @@ internal record CommonData
 {
     public required Dictionary<string, Metadata> MetaData { get; set; }
 
-    public required Dictionary<string, BaseItem> Features { get; set; }
+    public required Dictionary<string, BaseItem> Capabilities { get; set; }
     public required Dictionary<string, BaseItem> Threats { get; set; }
     public required Dictionary<string, BaseItem> Controls { get; set; }
-
     public IDictionary<string, BaseItem> ToDictionary()
     {
         var combined = new Dictionary<string, BaseItem>();
 
-        foreach (var item in Features)
+        foreach (var item in Capabilities)
         {
             combined[item.Key] = item.Value;
         }

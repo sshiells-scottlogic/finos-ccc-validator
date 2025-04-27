@@ -22,7 +22,7 @@ internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, IC
         var isValid = true;
         var errorCount = 0;
 
-        var commonItem = await ParseYamlFile<TCommonItem>(Path.Combine(targetDir, Filename));
+        var commonItem = await ParseYamlFile<TCommonItem>(Path.Combine(targetDir, "common", Filename));
         var commonItems = GetItems(commonItem).ToList();
 
         var grouped = commonItems.GroupBy(x => x.Id).Where(x => x.Count() > 1);
@@ -72,7 +72,7 @@ internal abstract class CommonItemValidator<TCommonItem, TItem> : FileParser, IC
 
         var ids = relatedCommonItems.Keys;
 
-        foreach (var line in File.ReadLines(Path.Combine(targetDir, Filename)))
+        foreach (var line in File.ReadLines(Path.Combine(targetDir, "common", Filename)))
         {
             foreach (var id in ids)
             {

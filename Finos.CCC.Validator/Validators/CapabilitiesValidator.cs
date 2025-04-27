@@ -2,9 +2,9 @@
 
 namespace Finos.CCC.Validator.Validators;
 
-internal interface IFeaturesValidator : IValidator;
+internal interface ICapabilitiesValidator : IValidator;
 
-internal class FeaturesValidator : FileParser, IFeaturesValidator
+internal class CapabilitiesValidator : FileParser, ICapabilitiesValidator
 {
     public async Task<BoolResult> Validate(CommonData commonData)
     {
@@ -12,7 +12,7 @@ internal class FeaturesValidator : FileParser, IFeaturesValidator
         var errorCount = 0;
         foreach (var file in commonData.MetaData)
         {
-            var result = await ValidateFeature(file.Key, file.Value, commonData);
+            var result = await ValidateCapability(file.Key, file.Value, commonData);
             valid &= result.Valid;
             errorCount += result.ErrorCount;
         }
@@ -20,22 +20,22 @@ internal class FeaturesValidator : FileParser, IFeaturesValidator
         return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private async Task<BoolResult> ValidateFeature(string filePath, Metadata metadata, CommonData commonData)
+    private async Task<BoolResult> ValidateCapability(string filePath, Metadata metadata, CommonData commonData)
     {
         var valid = true;
         var errorCount = 0;
-        var fullFilePath = Path.Combine(filePath, "features.yaml");
+        var fullFilePath = Path.Combine(filePath, "capabilities.yaml");
         if (!File.Exists(fullFilePath))
         {
             Console.WriteLine($"{fullFilePath} not found.");
             return new BoolResult { Valid = valid, ErrorCount = errorCount };
         }
-        var featureFile = await ParseYamlFile<FeaturesFile>(fullFilePath);
+        var capabilityFile = await ParseYamlFile<CapabilitiesFile>(fullFilePath);
 
         Console.WriteLine($"Validation of {fullFilePath} Started.");
 
-        var commonResult = ValidateCommonFeatures(featureFile, commonData);
-        var idResult = ValidateFeatureId(featureFile, metadata);
+        var commonResult = ValidateCommonCapabilities(capabilityFile, commonData);
+        var idResult = ValidateCapabilitiyId(capabilityFile, metadata);
 
         valid &= commonResult.Valid && idResult.Valid;
         errorCount += commonResult.ErrorCount + idResult.ErrorCount;
@@ -55,18 +55,18 @@ internal class FeaturesValidator : FileParser, IFeaturesValidator
         return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private BoolResult ValidateCommonFeatures(FeaturesFile file, CommonData commonData)
+    private BoolResult ValidateCommonCapabilities(CapabilitiesFile file, CommonData commonData)
     {
         var valid = true;
         var errorCount = 0;
 
-        var commonIds = commonData.Features.Select(x => x.Key).ToList();
+        var commonIds = commonData.Capabilities.Select(x => x.Key).ToList();
 
-        foreach (var feature in file.CommonFeatures)
+        foreach (var capability in file.CommonFeatures)
         {
-            if (!commonIds.Contains(feature))
+            if (!commonIds.Contains(capability))
             {
-                ConsoleWriter.WriteError($"ERROR: Feature {feature} is not a valid common feature.");
+                ConsoleWriter.WriteError($"ERROR: Capability {capability} is not a valid common capability.");
                 valid = false;
                 errorCount++;
             }
@@ -75,16 +75,16 @@ internal class FeaturesValidator : FileParser, IFeaturesValidator
         return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
 
-    private BoolResult ValidateFeatureId(FeaturesFile file, Metadata metadata)
+    private BoolResult ValidateCapabilitiyId(CapabilitiesFile file, Metadata metadata)
     {
         var valid = true;
         var errorCount = 0;
 
-        foreach (var feature in file.Features)
+        foreach (var capability in file.Features)
         {
-            if (!feature.Id.StartsWith(metadata.Id))
+            if (!capability.Id.StartsWith(metadata.Id))
             {
-                ConsoleWriter.WriteError($"ERROR: Feature {feature} does not match Id {metadata.Id} specified in Metadata file.");
+                ConsoleWriter.WriteError($"ERROR: Capability {capability} does not match Id {metadata.Id} specified in Metadata file.");
                 valid = false;
                 errorCount++;
             }

@@ -4,7 +4,7 @@ namespace Finos.CCC.Validator.Validators;
 
 internal class CommonThreatsValidator : CommonItemValidator<CommonThreats, Threat>
 {
-    public override string Filename => "common-threats.yaml";
+    public override string Filename => "threats.yaml";
 
     public override string Description => "Threats";
 
@@ -15,17 +15,22 @@ internal class CommonThreatsValidator : CommonItemValidator<CommonThreats, Threa
         var valid = true;
         var errorCount = 0;
 
-        var featureIds = relatedCommonItems.Select(x => x.Key).ToList();
+        var capabilityIds = relatedCommonItems.Select(x => x.Key).ToList();
 
         foreach (var threat in itemsToValidate)
         {
-            foreach (var feature in threat.Features)
+            var cccSharedCapabilities = threat.Capabilities.FirstOrDefault(x => x.ReferenceId == "CCC");
+
+            if (cccSharedCapabilities != null)
             {
-                if (!featureIds.Contains(feature))
+                foreach (var capability in cccSharedCapabilities.Identifiers)
                 {
-                    valid = false;
-                    errorCount++;
-                    ConsoleWriter.WriteError($"ERROR: {threat.Id} contains an invalid common feature: {feature}.");
+                    if (!capabilityIds.Contains(capability))
+                    {
+                        valid = false;
+                        errorCount++;
+                        ConsoleWriter.WriteError($"ERROR: {threat.Id} contains an invalid common capability: {capability}.");
+                    }
                 }
             }
         }

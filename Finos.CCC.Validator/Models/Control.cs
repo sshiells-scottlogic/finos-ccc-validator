@@ -2,7 +2,7 @@
 
 internal record Control : BaseItem
 {
-    public required List<string> Threats { get; set; }
+    public required List<ReferenceList> ThreatMappings { get; set; }
 
     public required List<TestRequirement> TestRequirements { get; set; }
 }

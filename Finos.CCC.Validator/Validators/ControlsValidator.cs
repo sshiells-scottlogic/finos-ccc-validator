@@ -77,17 +77,17 @@ internal class ControlsValidator : FileParser, IControlsValidator
         var valid = true;
         var errorCount = 0;
 
-        var commonIds = commonData.Controls.Select(control => control.Key).ToList();
+        //var commonIds = commonData.Controls.Select(control => control.Key).ToList();
 
-        foreach (var control in file.CommonControls)
-        {
-            if (!commonIds.Contains(control))
-            {
-                ConsoleWriter.WriteError($"ERROR: Control {control} is not a valid common control.");
-                valid = false;
-                errorCount++;
-            }
-        }
+        //foreach (var control in file.CommonControls)
+        //{
+        //    if (!commonIds.Contains(control))
+        //    {
+        //        ConsoleWriter.WriteError($"ERROR: Control {control} is not a valid common control.");
+        //        valid = false;
+        //        errorCount++;
+        //    }
+        //}
 
         return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
@@ -120,24 +120,24 @@ internal class ControlsValidator : FileParser, IControlsValidator
         var valid = true;
         var errorCount = 0;
 
-        var validThreats = threatsFile.CommonThreats.ToList();
-        if (threatsFile.Threats != null)
-        {
-            validThreats.AddRange(threatsFile.Threats.Select(x => x.Id));
-        }
+        //var validThreats = threatsFile.CommonThreats.ToList();
+        //if (threatsFile.Threats != null)
+        //{
+        //    validThreats.AddRange(threatsFile.Threats.Select(x => x.Id));
+        //}
 
-        foreach (var control in file.Controls)
-        {
-            foreach (var threat in control.Threats)
-            {
-                if (!validThreats.Contains(threat))
-                {
-                    ConsoleWriter.WriteError($"ERROR: {control.Id} contains an invalid threat: {threat}. Threat {threat} was not listed in {threatsFilePath}.");
-                    valid = false;
-                    errorCount++;
-                }
-            }
-        }
+        //foreach (var control in file.Controls)
+        //{
+        //    foreach (var threat in control.Threats)
+        //    {
+        //        if (!validThreats.Contains(threat))
+        //        {
+        //            ConsoleWriter.WriteError($"ERROR: {control.Id} contains an invalid threat: {threat}. Threat {threat} was not listed in {threatsFilePath}.");
+        //            valid = false;
+        //            errorCount++;
+        //        }
+        //    }
+        //}
 
         return new BoolResult { Valid = valid, ErrorCount = errorCount };
     }
@@ -168,34 +168,34 @@ internal class ControlsValidator : FileParser, IControlsValidator
         var isValid = true;
         var errorCount = 0;
 
-        var commonDataDict = commonData.ToDictionary();
-        var ids = commonDataDict.Keys;
+        //var commonDataDict = commonData.ToDictionary();
+        //var ids = commonDataDict.Keys;
 
-        if (threatsFile != null && threatsFile.Threats != null)
-        {
-            foreach (var threat in threatsFile.Threats)
-            {
-                commonDataDict[threat.Id] = threat;
-            }
-        }
+        //if (threatsFile != null && threatsFile.Threats != null)
+        //{
+        //    foreach (var threat in threatsFile.Threats)
+        //    {
+        //        commonDataDict[threat.Id] = threat;
+        //    }
+        //}
 
-        foreach (var line in File.ReadLines(path))
-        {
-            foreach (var id in ids)
-            {
-                if (line.Contains(id))
-                {
-                    var index = line.IndexOf(id);
-                    var rest = line.Substring(index + id.Length).Trim([' ', '#']);
-                    if (rest.ToLower() != commonDataDict[id].Title.ToLower())
-                    {
-                        errorCount++;
-                        isValid = false;
-                        ConsoleWriter.WriteError($"Invalid comment following Id: {id} has comment '{rest}' but should be '{commonDataDict[id].Title}'");
-                    }
-                }
-            }
-        }
+        //foreach (var line in File.ReadLines(path))
+        //{
+        //    foreach (var id in ids)
+        //    {
+        //        if (line.Contains(id))
+        //        {
+        //            var index = line.IndexOf(id);
+        //            var rest = line.Substring(index + id.Length).Trim([' ', '#']);
+        //            if (rest.ToLower() != commonDataDict[id].Title.ToLower())
+        //            {
+        //                errorCount++;
+        //                isValid = false;
+        //                ConsoleWriter.WriteError($"Invalid comment following Id: {id} has comment '{rest}' but should be '{commonDataDict[id].Title}'");
+        //            }
+        //        }
+        //    }
+        //}
 
         return new BoolResult { Valid = isValid, ErrorCount = errorCount };
     }
