@@ -62,13 +62,18 @@ internal class CapabilitiesValidator : FileParser, ICapabilitiesValidator
 
         var commonIds = commonData.Capabilities.Select(x => x.Key).ToList();
 
-        foreach (var capability in file.CommonFeatures)
+        var cccSharedCapabilities = file.SharedCapabilities.FirstOrDefault(x => x.ReferenceId == "CCC");
+
+        if (cccSharedCapabilities != null)
         {
-            if (!commonIds.Contains(capability))
+            foreach (var capability in cccSharedCapabilities.Identifiers)
             {
-                ConsoleWriter.WriteError($"ERROR: Capability {capability} is not a valid common capability.");
-                valid = false;
-                errorCount++;
+                if (!commonIds.Contains(capability))
+                {
+                    ConsoleWriter.WriteError($"ERROR: Capability {capability} is not a valid common capability.");
+                    valid = false;
+                    errorCount++;
+                }
             }
         }
 
@@ -80,7 +85,7 @@ internal class CapabilitiesValidator : FileParser, ICapabilitiesValidator
         var valid = true;
         var errorCount = 0;
 
-        foreach (var capability in file.Features)
+        foreach (var capability in file.Capabilities)
         {
             if (!capability.Id.StartsWith(metadata.Id))
             {
