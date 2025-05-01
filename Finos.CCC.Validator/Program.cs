@@ -79,13 +79,24 @@ static async ValueTask StartAnalysisAsync(ActionInputs inputs, IHost host)
         + threatsResult.ErrorCount
         + controlsResult.ErrorCount;
 
+    var warningCount = capabilitiesResult.WarningCount
+        + threatsResult.WarningCount
+        + controlsResult.WarningCount;
+
     if (isValid)
     {
-        ConsoleWriter.WriteSuccess("Validation Completed Successfully.");
+        if (warningCount > 0)
+        {
+            ConsoleWriter.WriteWarning($"Validation Completed Successfully with {warningCount} warning(s).");
+        }
+        else
+        {
+            ConsoleWriter.WriteSuccess("Validation Completed Successfully.");
+        }
     }
     else
     {
-        ConsoleWriter.WriteError($"Validation Failed with {errorCount} error(s).");
+        ConsoleWriter.WriteError($"Validation Failed with {errorCount} error(s) and {warningCount} warning(s).");
     }
 
     Environment.Exit(isValid ? 0 : 1);

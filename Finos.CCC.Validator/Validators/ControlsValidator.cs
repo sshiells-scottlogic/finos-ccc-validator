@@ -9,20 +9,23 @@ internal class ControlsValidator : FileParser, IControlsValidator
     {
         var valid = true;
         var errorCount = 0;
+        var warningCount = 0;
         foreach (var file in commonData.MetaData)
         {
             var controlResult = await ValidateControl(file.Key, file.Value, commonData);
             valid &= controlResult.Valid;
             errorCount += controlResult.ErrorCount;
+            warningCount += controlResult.WarningCount;
         }
 
-        return new BoolResult { Valid = valid, ErrorCount = errorCount };
+        return new BoolResult { Valid = valid, ErrorCount = errorCount, WarningCount = warningCount };
     }
 
     private async Task<BoolResult> ValidateControl(string filePath, Metadata metadata, CommonData commonData)
     {
         var valid = true;
         var errorCount = 0;
+        var warningCount = 0;
         var fullFilePath = Path.Combine(filePath, "controls.yaml");
         if (!File.Exists(fullFilePath))
         {
@@ -51,6 +54,7 @@ internal class ControlsValidator : FileParser, IControlsValidator
             var threatsResult = ValidateThreats(controlFile, threatsFile, threatsFilePath);
             valid &= threatsResult.Valid;
             errorCount += threatsResult.ErrorCount;
+            warningCount += threatsResult.WarningCount;
         }
         else
         {
@@ -60,16 +64,24 @@ internal class ControlsValidator : FileParser, IControlsValidator
         var fileResult = ValidateFile(fullFilePath, commonData, threatsFile);
         valid &= fileResult.Valid;
         errorCount += fileResult.ErrorCount;
+        warningCount += fileResult.WarningCount;
 
         if (valid)
         {
-            Console.WriteLine($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}.");
+            if (warningCount > 0)
+            {
+                ConsoleWriter.WriteWarning($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()} with warnings.");
+            }
+            else
+            {
+                Console.WriteLine($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}.");
+            }
         }
         else
         {
             ConsoleWriter.WriteError($"Validation of {fullFilePath} Complete. Status {valid.ToPassOrFail()}.");
         }
-        return new BoolResult { Valid = valid, ErrorCount = errorCount };
+        return new BoolResult { Valid = valid, ErrorCount = errorCount, WarningCount = warningCount };
     }
 
     private BoolResult ValidateCommonControls(ControlsFile file, CommonData commonData)
@@ -123,6 +135,7 @@ internal class ControlsValidator : FileParser, IControlsValidator
     {
         var valid = true;
         var errorCount = 0;
+        var warningCount = 0;
 
         var cccSharedThreats = threatsFile.SharedThreats.FirstOrDefault(x => x.ReferenceId == "CCC");
         var validThreats = cccSharedThreats != null ? cccSharedThreats.Identifiers.ToList() : [];
@@ -140,15 +153,14 @@ internal class ControlsValidator : FileParser, IControlsValidator
                 {
                     if (!validThreats.Contains(threat))
                     {
-                        ConsoleWriter.WriteError($"ERROR: {control.Id} contains an invalid threat: {threat}. Threat {threat} was not listed in {threatsFilePath}.");
-                        valid = false;
-                        errorCount++;
+                        ConsoleWriter.WriteWarning($"WARNING: {control.Id} contains an invalid threat: {threat}. Threat {threat} was not listed in {threatsFilePath}.");
+                        warningCount++;
                     }
                 }
             }
         }
 
-        return new BoolResult { Valid = valid, ErrorCount = errorCount };
+        return new BoolResult { Valid = valid, ErrorCount = errorCount, WarningCount = warningCount };
     }
 
     private BoolResult ValidateTestRequirements(ControlsFile file)
@@ -174,11 +186,7 @@ internal class ControlsValidator : FileParser, IControlsValidator
 
     internal BoolResult ValidateFile(string path, CommonData commonData, ThreatsFile? threatsFile)
     {
-        var isValid = true;
-        var errorCount = 0;
-
         var commonDataDict = commonData.ToDictionary();
-        var ids = commonDataDict.Keys;
 
         if (threatsFile != null && threatsFile.Threats != null)
         {
@@ -188,24 +196,6 @@ internal class ControlsValidator : FileParser, IControlsValidator
             }
         }
 
-        foreach (var line in File.ReadLines(path))
-        {
-            foreach (var id in ids)
-            {
-                if (line.Contains(id))
-                {
-                    var index = line.IndexOf(id);
-                    var rest = line.Substring(index + id.Length).Trim([' ', '#']);
-                    if (rest.ToLower() != commonDataDict[id].Title.ToLower())
-                    {
-                        errorCount++;
-                        isValid = false;
-                        ConsoleWriter.WriteError($"Invalid comment following Id: {id} has comment '{rest}' but should be '{commonDataDict[id].Title}'");
-                    }
-                }
-            }
-        }
-
-        return new BoolResult { Valid = isValid, ErrorCount = errorCount };
+        return ValidateComments(path, commonDataDict);
     }
 }
