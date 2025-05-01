@@ -161,9 +161,6 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
 
     internal BoolResult ValidateFile(string path, CommonData commonData, CapabilitiesFile? capabilitiesFile)
     {
-        var isValid = true;
-        var errorCount = 0;
-
         var commonDataDict = commonData.ToDictionary();
         if (capabilitiesFile != null && capabilitiesFile.Capabilities != null)
         {
@@ -172,26 +169,7 @@ internal class ThreatsValidator : FileParser, IThreatsValidator
                 commonDataDict[capability.Id] = capability;
             }
         }
-        var ids = commonDataDict.Keys;
 
-        foreach (var line in File.ReadLines(path))
-        {
-            foreach (var id in ids)
-            {
-                if (line.Contains(id))
-                {
-                    var index = line.IndexOf(id);
-                    var rest = line.Substring(index + id.Length).Trim([' ', '#']);
-                    if (rest.ToLower() != commonDataDict[id].Title.ToLower())
-                    {
-                        errorCount++;
-                        isValid = false;
-                        ConsoleWriter.WriteError($"Invalid comment following Id: {id} has comment '{rest}' but should be '{commonDataDict[id].Title}'");
-                    }
-                }
-            }
-        }
-
-        return new BoolResult { Valid = isValid, ErrorCount = errorCount };
+        return ValidateComments(path, commonDataDict);
     }
 }

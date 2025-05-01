@@ -4,4 +4,6 @@ public record BoolResult
 {
     public bool Valid { get; set; }
     public int ErrorCount { get; set; }
+
+    public int WarningCount { get; set; }
 }
